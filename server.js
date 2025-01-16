@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import expressListEndpoints from "express-list-endpoints";
 
 const port = process.env.PORT || 8080;
 const app = express();
@@ -81,10 +82,20 @@ Recipe.deleteMany().then(() => {
   }).save();
 });
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
+  res.send(endpoints);
+});
+
+app.get("/recipes", async (req, res) => {
   try {
-    const recipes = await Recipe.find();
+    let recipes = await Recipe.find();
+    const ingredientRecipes = recipes.filter((recipe) =>
+      recipe.ingredients.includes(req.query.ingredient)
+    );
     if (recipes.length > 0) {
+      if (ingredientRecipes.length > 0) {
+        recipes = ingredientRecipes;
+      }
       res.json(recipes);
     } else {
       res.status(404).json({ error: "No recipes found" });
@@ -94,7 +105,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-app.get("/:id", async (req, res) => {
+app.get("/recipes/:id", async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (recipe) {
@@ -106,5 +117,7 @@ app.get("/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid recipe id" });
   }
 });
+
+const endpoints = expressListEndpoints(app);
 
 app.listen(port, () => console.log(`App listening to port ${port}`));
