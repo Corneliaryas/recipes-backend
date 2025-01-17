@@ -28,7 +28,7 @@ const Recipe = mongoose.model("Recipe", {
     required: true,
   },
   ingredients: {
-    type: String,
+    type: [String],
     required: true,
   },
   instructions: {
@@ -56,7 +56,7 @@ const Recipe = mongoose.model("Recipe", {
 Recipe.deleteMany().then(() => {
   new Recipe({
     title: "Pancakes",
-    ingredients: "flour, eggs, milk, sugar, salt",
+    ingredients: ["flour", "eggs", "milk", "sugar", "salt"],
     instructions: "mix all ingredients, fry in pan",
     difficulty: "easy",
     time: 30,
@@ -64,7 +64,7 @@ Recipe.deleteMany().then(() => {
   }).save();
   new Recipe({
     title: "Coliflower soup",
-    ingredients: "Coliflower, cream, salt, pepper, water",
+    ingredients: ["Coliflower", "cream", "salt", "pepper", "water"],
     instructions: "mix all ingredients, boil, mix to a smooth soup",
     difficulty: "easy",
     time: 30,
@@ -73,7 +73,14 @@ Recipe.deleteMany().then(() => {
   }).save();
   new Recipe({
     title: "Enchiladas",
-    ingredients: "mince, tomato sauce, cheese, tortilla bread, spices",
+    ingredients: [
+      "mince",
+      "tomato",
+      "sauce",
+      "cheese",
+      "tortilla bread",
+      "spices",
+    ],
     instructions:
       "fry the mince, place a scope of fried mince in each tortilla bread, role them up, pour over tomato sauce and grated cheese, heat in owen for app 20 minutes.",
     difficulty: "medium",
@@ -115,6 +122,15 @@ app.get("/recipes/:id", async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: "Invalid recipe id" });
+  }
+});
+app.post("/recipes", async (req, res) => {
+  try {
+    const recipe = new Recipe(req.body);
+    await recipe.save();
+    res.json(recipe);
+  } catch (error) {
+    res.status(400).json({ error: "Invalid recipe" });
   }
 });
 
