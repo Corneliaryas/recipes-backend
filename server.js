@@ -25,14 +25,17 @@ mongoose.Promise = Promise;
 const Recipe = mongoose.model("Recipe", {
   title: {
     type: String,
+    minLength: 3,
     required: true,
   },
   ingredients: {
-    type: [String],
+    type: [{ type: String, minLength: 2 }],
+    validate: (input) => Array.isArray(input) && input.length > 0,
     required: true,
   },
   instructions: {
     type: String,
+    minLength: 3,
     required: true,
   },
   difficulty: {
@@ -51,43 +54,49 @@ const Recipe = mongoose.model("Recipe", {
     type: [String],
     required: false,
   },
+  created: {
+    type: Date,
+    default: Date.now,
+  },
 });
-
-Recipe.deleteMany().then(() => {
-  new Recipe({
-    title: "Pancakes",
-    ingredients: ["flour", "eggs", "milk", "sugar", "salt"],
-    instructions: "mix all ingredients, fry in pan",
-    difficulty: "easy",
-    time: 30,
-    preferences: ["vegetarian", "breakfast"],
-  }).save();
-  new Recipe({
-    title: "Coliflower soup",
-    ingredients: ["Coliflower", "cream", "salt", "pepper", "water"],
-    instructions: "mix all ingredients, boil, mix to a smooth soup",
-    difficulty: "easy",
-    time: 30,
-    preferences: ["vegetarian", "lchf"],
-    categories: ["soup"],
-  }).save();
-  new Recipe({
-    title: "Enchiladas",
-    ingredients: [
-      "mince",
-      "tomato",
-      "sauce",
-      "cheese",
-      "tortilla bread",
-      "spices",
-    ],
-    instructions:
-      "fry the mince, place a scope of fried mince in each tortilla bread, role them up, pour over tomato sauce and grated cheese, heat in owen for app 20 minutes.",
-    difficulty: "medium",
-    time: 50,
-    preferences: ["vegetarian", "dinner", "low-carb"],
-  }).save();
-});
+if (process.env.RESET_DATABASE) {
+  console.log("Resetting database");
+  Recipe.deleteMany().then(() => {
+    new Recipe({
+      title: "Pancakes",
+      ingredients: ["flour", "eggs", "milk", "sugar", "salt"],
+      instructions: "mix all ingredients, fry in pan",
+      difficulty: "easy",
+      time: 30,
+      preferences: ["vegetarian", "breakfast"],
+    }).save();
+    new Recipe({
+      title: "Coliflower soup",
+      ingredients: ["Coliflower", "cream", "salt", "pepper", "water"],
+      instructions: "mix all ingredients, boil, mix to a smooth soup",
+      difficulty: "easy",
+      time: 30,
+      preferences: ["vegetarian", "lchf"],
+      categories: ["soup"],
+    }).save();
+    new Recipe({
+      title: "Enchiladas",
+      ingredients: [
+        "mince",
+        "tomato",
+        "sauce",
+        "cheese",
+        "tortilla bread",
+        "spices",
+      ],
+      instructions:
+        "fry the mince, place a scope of fried mince in each tortilla bread, role them up, pour over tomato sauce and grated cheese, heat in owen for app 20 minutes.",
+      difficulty: "medium",
+      time: 50,
+      preferences: ["vegetarian", "dinner", "low-carb"],
+    }).save();
+  });
+}
 
 app.get("/", (req, res) => {
   res.send(endpoints);
@@ -103,7 +112,7 @@ app.get("/recipes", async (req, res) => {
       if (ingredientRecipes.length > 0) {
         recipes = ingredientRecipes;
       }
-      res.json(recipes);
+      res.json(recipes.sort((a, b) => (a.title < b.title ? -1 : 1)));
     } else {
       res.status(404).json({ error: "No recipes found" });
     }
@@ -126,11 +135,13 @@ app.get("/recipes/:id", async (req, res) => {
 });
 app.post("/recipes", async (req, res) => {
   try {
-    const recipe = new Recipe(req.body);
-    await recipe.save();
+    const recipe = await new Recipe(req.body).save();
     res.json(recipe);
   } catch (error) {
-    res.status(400).json({ error: "Invalid recipe" });
+    console.log(error.errors);
+    res
+      .status(400)
+      .json({ message: "Could not save recipe", errors: error.errors });
   }
 });
 
