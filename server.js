@@ -30,7 +30,7 @@ const Recipe = mongoose.model("Recipe", {
   },
   ingredients: {
     type: [{ type: String, minLength: 2 }],
-    validate: (input) => Array.isArray(input) && input.length > 0,
+    validate: (value) => Array.isArray(value) && value.length > 0,
     required: true,
   },
   instructions: {
