@@ -34,8 +34,8 @@ const Recipe = mongoose.model("Recipe", {
     required: true,
   },
   instructions: {
-    type: String,
-    minLength: 3,
+    type: [{ type: String, minLength: 2 }],
+    validate: (value) => Array.isArray(value) && value.length > 0,
     required: true,
   },
   difficulty: {
@@ -65,7 +65,7 @@ if (process.env.RESET_DATABASE) {
     new Recipe({
       title: "Pancakes",
       ingredients: ["flour", "eggs", "milk", "sugar", "salt"],
-      instructions: "mix all ingredients, fry in pan",
+      instructions: ["mix all ingredients, fry in pan"],
       difficulty: "easy",
       time: 30,
       preferences: ["vegetarian", "breakfast"],
@@ -73,7 +73,7 @@ if (process.env.RESET_DATABASE) {
     new Recipe({
       title: "Coliflower soup",
       ingredients: ["Coliflower", "cream", "salt", "pepper", "water"],
-      instructions: "mix all ingredients, boil, mix to a smooth soup",
+      instructions: ["mix all ingredients, boil, mix to a smooth soup"],
       difficulty: "easy",
       time: 30,
       preferences: ["vegetarian", "lchf"],
@@ -89,8 +89,9 @@ if (process.env.RESET_DATABASE) {
         "tortilla bread",
         "spices",
       ],
-      instructions:
+      instructions: [
         "fry the mince, place a scope of fried mince in each tortilla bread, role them up, pour over tomato sauce and grated cheese, heat in owen for app 20 minutes.",
+      ],
       difficulty: "medium",
       time: 50,
       preferences: ["vegetarian", "dinner", "low-carb"],
