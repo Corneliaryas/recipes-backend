@@ -105,14 +105,16 @@ app.get("/", (req, res) => {
 
 app.get("/recipes", async (req, res) => {
   try {
-    let recipes = await Recipe.find();
-    const ingredientRecipes = recipes.filter((recipe) =>
-      recipe.ingredients.includes(req.query.ingredient)
-    );
+    let recipes;
+    const regExSearch = new RegExp(req.query.search, "i");
+    if (regExSearch) {
+      recipes = await Recipe.find({
+        $or: [{ title: regExSearch }, { ingredients: { $in: [regExSearch] } }],
+      });
+    } else {
+      recipes = await Recipe.find();
+    }
     if (recipes.length > 0) {
-      if (ingredientRecipes.length > 0) {
-        recipes = ingredientRecipes;
-      }
       res.json(recipes.sort((a, b) => (a.title < b.title ? -1 : 1)));
     } else {
       res.status(404).json({ error: "No recipes found" });
@@ -134,6 +136,7 @@ app.get("/recipes/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid recipe id" });
   }
 });
+
 app.post("/recipes", async (req, res) => {
   try {
     const recipe = await new Recipe(req.body).save();
